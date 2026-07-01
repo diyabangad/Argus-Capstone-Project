@@ -30,49 +30,41 @@ ARGUS is a unified AI platform with two intelligence engines sharing one vendor 
 | **Optimizer** | Remediation & Vendor Re-routing Engine | Greedy Constraint Optimizer |
 | **Argus Assistant** | Conversational AI Chatbot | LLM + RAG + Tool Calling |
 
----
-
 ## 🏗️ System Architecture
-[Data Ingestion Layer]
 
-Procurement KPI Dataset + Logistics Dataset
-
-│
-
-▼
-
-[Shared Feature Store]
-
-Vendor Reliability Score · Price Volatility Index
-
-Lead Time History · Material Scarcity Index
-
-│
-
-┌─────┴─────┐
-
-▼           ▼
-[Module A]     [Module B]
-
-Price Risk    Disruption Risk
-
-Anomaly Det.  Delay Classifier
-
-│           │
-
-▼           ▼
-[Optimization & Remediation Engine]
-
-Renegotiation Target · Alternate Vendor Reroute
-
-│
-
-▼
-[Delivery Layer]
-
-React Dashboard · Argus Chatbot · FastAPI Automation Endpoint
-
----
+```
+┌──────────────────────────────────────────────────────┐
+│              DATA INGESTION LAYER                     │
+│    Procurement KPI Dataset + Logistics Dataset        │
+└───────────────────────┬──────────────────────────────┘
+                        │
+                        ▼
+┌──────────────────────────────────────────────────────┐
+│              SHARED FEATURE STORE                     │
+│   Vendor Reliability Score · Price Volatility Index   │
+│   Lead Time History  · Material Scarcity Index        │
+└────────────┬─────────────────────┬───────────────────┘
+             │                     │
+             ▼                     ▼
+┌─────────────────────┐  ┌─────────────────────────────┐
+│      MODULE A       │  │         MODULE B             │
+│    Price & Invoice  │  │   Supply Chain Disruption    │
+│   Anomaly Detection │  │      Delay Classifier        │
+└──────────┬──────────┘  └────────────┬────────────────┘
+           │                          │
+           └────────────┬─────────────┘
+                        ▼
+┌──────────────────────────────────────────────────────┐
+│        OPTIMIZATION & REMEDIATION ENGINE              │
+│  Renegotiation Target · Alternate Vendor Reroute      │
+└───────────────────────┬──────────────────────────────┘
+                        │
+                        ▼
+┌──────────────────────────────────────────────────────┐
+│                  DELIVERY LAYER                       │
+│  React Dashboard · Argus Chatbot · FastAPI Endpoint   │
+└──────────────────────────────────────────────────────┘
+```
 
 ## 🛠️ Tech Stack
 
