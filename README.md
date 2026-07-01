@@ -83,28 +83,29 @@ ARGUS is a unified AI platform with two intelligence engines sharing one vendor 
 ---
 
 ## 📁 Project Structure
+
+```
 argus-capstone/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py           # FastAPI entrypoint
-│   │   ├── routers/          # API route handlers
-│   │   ├── models/           # ML model loaders
-│   │   ├── schemas/          # Pydantic schemas
-│   │   └── core/             # Config & DB connection
+│   │   ├── main.py                  # FastAPI entrypoint
+│   │   ├── routers/                 # API route handlers
+│   │   ├── models/                  # ML model loaders
+│   │   ├── schemas/                 # Pydantic schemas
+│   │   └── core/                    # Config & DB connection
 │   ├── ml/
-│   │   ├── module_a_price_anomaly/    # Anomaly detection notebooks & scripts
-│   │   ├── module_b_disruption/       # Delay prediction notebooks & scripts
-│   │   └── optimization/              # Remediation engine
+│   │   ├── module_a_price_anomaly/  # Anomaly detection notebooks & scripts
+│   │   ├── module_b_disruption/     # Delay prediction notebooks & scripts
+│   │   └── optimization/            # Remediation engine
 │   └── data/
-│       ├── raw/              # Original datasets
-│       └── processed/        # Cleaned & engineered datasets
-├── frontend/                 # React dashboard
-├── chatbot/                  # Argus Assistant (RAG + tool calling)
-├── docs/                     # Architecture & documentation
-├── .env.example              # Environment variable template
+│       ├── raw/                     # Original datasets
+│       └── processed/               # Cleaned & engineered datasets
+├── frontend/                        # React dashboard
+├── chatbot/                         # Argus Assistant (RAG + tool calling)
+├── docs/                            # Architecture & documentation
+├── .env.example                     # Environment variable template
 └── README.md
-
----
+```
 
 ## 📊 Datasets
 
