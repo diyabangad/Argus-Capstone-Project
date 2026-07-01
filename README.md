@@ -1,4 +1,3 @@
-cat > /workspaces/Argus-Capstone-Project/README.md << 'EOF'
 # 🔱 ARGUS
 ### Autonomous Risk & Governance for Unified Supply Chain
 > *"See the risk before it becomes a loss."*
@@ -35,9 +34,12 @@ ARGUS is a unified AI platform with two intelligence engines sharing one vendor 
 
 ## 🏗️ System Architecture
 [Data Ingestion Layer]
+
 Procurement KPI Dataset + Logistics Dataset
+
 │
 ▼
+
 [Shared Feature Store]
 Vendor Reliability Score · Price Volatility Index
 Lead Time History · Material Scarcity Index
