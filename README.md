@@ -38,25 +38,40 @@ ARGUS is a unified AI platform with two intelligence engines sharing one vendor 
 Procurement KPI Dataset + Logistics Dataset
 
 │
+
 ▼
 
 [Shared Feature Store]
+
 Vendor Reliability Score · Price Volatility Index
+
 Lead Time History · Material Scarcity Index
+
 │
+
 ┌─────┴─────┐
+
 ▼           ▼
-[Module A]    [Module B]
+[Module A]     [Module B]
+
 Price Risk    Disruption Risk
+
 Anomaly Det.  Delay Classifier
+
 │           │
+
 ▼           ▼
 [Optimization & Remediation Engine]
+
 Renegotiation Target · Alternate Vendor Reroute
+
 │
+
 ▼
 [Delivery Layer]
+
 React Dashboard · Argus Chatbot · FastAPI Automation Endpoint
+
 ---
 
 ## 🛠️ Tech Stack
