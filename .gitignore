@@ -4,8 +4,14 @@ __pycache__/
 *.pkl
 *.joblib
 .env
-backend/data/raw/
-backend/data/processed/
+backend/data/raw/*
+!backend/data/raw/procurement_raw.csv
+!backend/data/raw/logistics_raw.csv
+backend/data/processed/*
+!backend/data/processed/procurement_cleaned.csv
+!backend/data/processed/logistics_cleaned.csv
+!backend/data/processed/procurement_synthetic_expanded.csv
+!backend/data/processed/unified_procurement_logistics.csv
 node_modules/
 dist/
 build/
