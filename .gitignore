@@ -16,3 +16,6 @@ node_modules/
 dist/
 build/
 .DS_Store
+
+# Local SQLite database
+backend/data/*.db
