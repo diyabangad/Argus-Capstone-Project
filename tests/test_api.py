@@ -47,3 +47,5 @@ def test_remediation_endpoint_returns_recommendation():
     assert response.status_code == 200
     body = response.json()
     assert body['recommended_action'] in {'renegotiate', 'expedite_shipping', 'backup_vendor', 'monitor'}
+    assert 'severity_score' in body
+    assert 'expected_cost' in body
