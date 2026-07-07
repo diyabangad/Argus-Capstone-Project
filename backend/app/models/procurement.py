@@ -20,6 +20,7 @@ class Vendor(Base):
     supplier_name: Mapped[str] = mapped_column(String(150), unique=True, index=True)
     reliability_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     reliability_bucket: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    material_group: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     purchase_orders: Mapped[list["PurchaseOrder"]] = relationship(
         back_populates="vendor"
@@ -38,6 +39,8 @@ class PurchaseOrder(Base):
     )
 
     item_category: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    material_group: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    vendor_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     order_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     delivery_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     expected_delivery_date: Mapped[date | None] = mapped_column(Date, nullable=True)
@@ -87,6 +90,12 @@ class RiskScore(Base):
     logistics_shipping_costs: Mapped[float | None] = mapped_column(Float, nullable=True)
     logistics_delay_probability: Mapped[float | None] = mapped_column(Float, nullable=True)
     logistics_delivery_time_deviation: Mapped[float | None] = mapped_column(Float, nullable=True)
+    supplier_reliability_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    price_anomaly_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    delay_probability: Mapped[float | None] = mapped_column(Float, nullable=True)
+    delivery_time_deviation: Mapped[float | None] = mapped_column(Float, nullable=True)
+    rolling_delay_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    price_volatility_index: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     purchase_order: Mapped["PurchaseOrder"] = relationship(
         back_populates="risk_score"

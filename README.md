@@ -18,5 +18,16 @@ An AI-powered Procurement & Supply Chain Risk Intelligence Platform built for en
 - Database: PostgreSQL
 - Deployment: Docker + Render
 
+## Data engineering and feature store
+- Run the preprocessing pipeline with:
+  - `/home/codespace/.python/current/bin/python backend/ml/prepare_procurement_logistics_dataset.py`
+- This creates cleaned procurement, cleaned logistics, synthetic procurement, and unified datasets in backend/data/processed.
+- The SQLite demo feature store is populated with the unified data via backend/app/load_feature_store.py.
+
+## Module A and Module B
+- Module A trains an Isolation Forest model for price anomaly detection.
+- Module B trains a delay-risk classifier and regressor for disruption prediction.
+- Model artifacts are stored in backend/ml/models.
+
 ## Team
 Built for Neovatic Capstone Project

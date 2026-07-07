@@ -7,7 +7,6 @@ writes processed outputs to backend/data/processed.
 
 from __future__ import annotations
 
-from datetime import timedelta
 from pathlib import Path
 
 import numpy as np
@@ -191,6 +190,33 @@ def merge_procurement_and_logistics(
         left_on="Supplier_Reliability_Bucket",
         right_on="supplier_reliability_bucket",
     )
+
+    merged = merged.sort_values(["Supplier", "Order_Date"]).reset_index(drop=True)
+
+    merged["vendor_id"] = merged["Supplier"].astype("category").cat.codes + 1
+    merged["material_group"] = merged["Item_Category"].replace(
+        {
+            "Office Supplies": "office",
+            "MRO": "operations",
+            "Packaging": "packaging",
+            "Raw Materials": "raw_materials",
+            "Electronics": "electronics",
+        }
+    )
+    merged["item_category"] = merged["Item_Category"]
+
+    merged["supplier_reliability_score"] = merged["Supplier_Reliability_Score"]
+    merged["price_anomaly_score"] = merged["Price_Anomaly_Score"]
+    merged["delay_probability"] = merged["logistics_median_delay_probability"].fillna(0.0)
+    merged["delivery_time_deviation"] = merged["logistics_median_delivery_time_deviation"].fillna(0.0)
+
+    merged["rolling_delay_rate"] = (
+        merged.groupby("Supplier")["Delay_Label"].transform(lambda s: s.rolling(5, min_periods=1).mean())
+    )
+    merged["price_volatility_index"] = (
+        merged.groupby("Supplier")["Price_Gap_Pct"].transform(lambda s: s.rolling(5, min_periods=1).std().fillna(0.0))
+    )
+
     merged = merged.drop(columns=["supplier_reliability_bucket"])
     return merged
 

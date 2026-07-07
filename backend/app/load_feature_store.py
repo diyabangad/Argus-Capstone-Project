@@ -53,6 +53,7 @@ def load_feature_store():
                     reliability_bucket=clean_value(
                         row["Supplier_Reliability_Bucket"]
                     ),
+                    material_group=clean_value(row["material_group"]),
                 )
                 vendors[supplier_name] = vendor
                 db.add(vendor)
@@ -60,7 +61,9 @@ def load_feature_store():
             purchase_order = PurchaseOrder(
                 po_id=str(row["PO_ID"]),
                 vendor=vendors[supplier_name],
-                item_category=clean_value(row["Item_Category"]),
+                item_category=clean_value(row["item_category"]),
+                material_group=clean_value(row["material_group"]),
+                vendor_id=clean_value(row["vendor_id"]),
                 order_date=clean_date(row["Order_Date"]),
                 delivery_date=clean_date(row["Delivery_Date"]),
                 expected_delivery_date=clean_date(
@@ -87,7 +90,7 @@ def load_feature_store():
                 delay_label=bool(row["Delay_Label"]),
                 price_gap=clean_value(row["Price_Gap"]),
                 price_gap_pct=clean_value(row["Price_Gap_Pct"]),
-                price_anomaly_score=clean_value(
+                price_gap_anomaly_score=clean_value(
                     row["Price_Anomaly_Score"]
                 ),
                 logistics_eta_variation_hours=clean_value(
@@ -113,6 +116,24 @@ def load_feature_store():
                 ),
                 logistics_delivery_time_deviation=clean_value(
                     row["logistics_median_delivery_time_deviation"]
+                ),
+                supplier_reliability_score=clean_value(
+                    row["supplier_reliability_score"]
+                ),
+                price_anomaly_score=clean_value(
+                    row["price_anomaly_score"]
+                ),
+                delay_probability=clean_value(
+                    row["delay_probability"]
+                ),
+                delivery_time_deviation=clean_value(
+                    row["delivery_time_deviation"]
+                ),
+                rolling_delay_rate=clean_value(
+                    row["rolling_delay_rate"]
+                ),
+                price_volatility_index=clean_value(
+                    row["price_volatility_index"]
                 ),
             )
 
