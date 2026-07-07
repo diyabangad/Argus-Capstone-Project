@@ -29,5 +29,19 @@ An AI-powered Procurement & Supply Chain Risk Intelligence Platform built for en
 - Module B trains a delay-risk classifier and regressor for disruption prediction.
 - Model artifacts are stored in backend/ml/models.
 
+## Backend API
+- Start the API with:
+  - `/home/codespace/.python/current/bin/python -m uvicorn app.main:app --reload`
+- Available endpoints include:
+  - `/api/price-risk`
+  - `/api/delay-risk`
+  - `/api/remediation`
+  - `/api/summary`
+
+## Quick smoke test
+- Run:
+  - `/home/codespace/.python/current/bin/python -m pytest -q tests/test_api.py`
+- This verifies the core API flow and remediation logic.
+
 ## Team
 Built for Neovatic Capstone Project
