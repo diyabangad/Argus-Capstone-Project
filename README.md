@@ -166,12 +166,12 @@ uvicorn app.main:app --reload
 |---|---|
 | Project Structure | ✅ Complete |
 | Dataset Ingestion | ✅ Complete |
-| EDA & Feature Engineering | 🟡 In Progress |
-| Module A — Price Anomaly | 🟡 In Progress |
-| Module B — Disruption Risk | 🟡 In Progress |
-| Optimization Engine | 🔴 Upcoming |
+| EDA & Feature Engineering | ✅ Complete |
+| Module A — Price Anomaly | ✅ Complete |
+| Module B — Disruption Risk | ✅ Complete |
+| Optimization Engine | ✅ Complete|
 | React Dashboard | 🔴 Upcoming |
-| Argus Chatbot | 🔴 Upcoming |
+| Argus Chatbot | 🟡 In Progress |
 | Deployment | 🔴 Upcoming |
 
 ---
