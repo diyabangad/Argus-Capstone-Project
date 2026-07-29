@@ -1,136 +1,167 @@
 import re
+from typing import Any
+
 import requests
-import streamlit as st
+
 
 API_BASE_URL = "http://127.0.0.1:8000"
-
-
-def extract_po_id(text: str):
-    match = re.search(r"PO-\d+", text.upper())
-    return match.group(0) if match else None
-
-
-def get_summary():
-    response = requests.get(f"{API_BASE_URL}/api/summary")
-    response.raise_for_status()
-    return response.json()
-
-
-def get_price_risk(po_id: str):
-    response = requests.get(
-        f"{API_BASE_URL}/api/price-risk",
-        params={"po_id": po_id}
-    )
-    response.raise_for_status()
-    return response.json()
-
-
-def get_delay_risk(po_id: str):
-    response = requests.get(
-        f"{API_BASE_URL}/api/delay-risk",
-        params={"po_id": po_id}
-    )
-    response.raise_for_status()
-    return response.json()
-
-
-def build_bot_reply(user_question: str):
-    question = user_question.lower()
-    po_id = extract_po_id(user_question)
-
-    try:
-        if "summary" in question or "overview" in question or "total" in question:
-            data = get_summary()
-            return (
-                f"ARGUS analysed {data['total_purchase_orders']} purchase orders.\n\n"
-                f"- High price-risk orders: {data['high_price_risk_orders']}\n"
-                f"- High delay-risk orders: {data['high_delay_risk_orders']}"
-            )
-
-        if po_id and ("price" in question or "anomaly" in question):
-            data = get_price_risk(po_id)
-            return (
-                f"Price risk result for {data['po_id']}:\n\n"
-                f"- Supplier: {data['supplier']}\n"
-                f"- Item category: {data['item_category']}\n"
-                f"- Is price anomaly: {data['is_anomaly']}\n"
-                f"- Anomaly score: {data['anomaly_score']}"
-            )
-
-        if po_id and ("delay" in question or "late" in question):
-            data = get_delay_risk(po_id)
-            return (
-                f"Delay risk result for {data['po_id']}:\n\n"
-                f"- Supplier: {data['supplier']}\n"
-                f"- Item category: {data['item_category']}\n"
-                f"- Delay probability: {data['delay_probability']}\n"
-                f"- Predicted delay days: {data['predicted_delay_days']}"
-            )
-
-        if po_id:
-            price_data = get_price_risk(po_id)
-            delay_data = get_delay_risk(po_id)
-
-            return (
-                f"Risk summary for {po_id}:\n\n"
-                f"Price risk:\n"
-                f"- Is anomaly: {price_data['is_anomaly']}\n"
-                f"- Anomaly score: {price_data['anomaly_score']}\n\n"
-                f"Delay risk:\n"
-                f"- Delay probability: {delay_data['delay_probability']}\n"
-                f"- Predicted delay days: {delay_data['predicted_delay_days']}\n\n"
-                f"Supplier: {price_data['supplier']}\n"
-                f"Item category: {price_data['item_category']}"
-            )
-
-        return (
-            "I can answer questions like:\n\n"
-            "- Give me project summary\n"
-            "- Check price risk for PO-00001\n"
-            "- Check delay risk for PO-00001\n"
-            "- Show risk for PO-00001"
-        )
-
-    except Exception as error:
-        return f"Something went wrong while calling the backend API: {error}"
-
-
-st.set_page_config(
-    page_title="ARGUS Assistant",
-    page_icon="🛡️",
-    layout="centered"
+VENDORS = (
+    "Alpha_Inc",
+    "Beta_Supplies",
+    "Gamma_Co",
+    "Delta_Logistics",
+    "Epsilon_Group",
 )
 
-st.title("ARGUS Assistant")
-st.caption("Procurement and supply-chain risk chatbot")
 
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {
-            "role": "assistant",
-            "content": "Hi, I am ARGUS Assistant. Ask me about procurement price risk, delay risk, or summary."
-        }
-    ]
+def call_api(path: str, params: dict[str, Any] | None = None) -> Any:
+    try:
+        response = requests.get(
+            f"{API_BASE_URL}{path}",
+            params=params,
+            timeout=10,
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.ConnectionError as error:
+        raise RuntimeError(
+            "I could not connect to the ARGUS backend. "
+            "Make sure FastAPI is running on http://127.0.0.1:8000."
+        ) from error
+    except requests.Timeout as error:
+        raise RuntimeError(
+            "The ARGUS backend took too long to respond."
+        ) from error
+    except requests.HTTPError as error:
+        raise RuntimeError(
+            f"The ARGUS backend returned HTTP {error.response.status_code}."
+        ) from error
+    except requests.RequestException as error:
+        raise RuntimeError(
+            f"The ARGUS backend request failed: {error}"
+        ) from error
+    except ValueError as error:
+        raise RuntimeError(
+            "The ARGUS backend returned an invalid response."
+        ) from error
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
 
-user_input = st.chat_input("Ask about PO risk, delay, price anomaly, or summary...")
+def detect_vendor(question: str) -> str | None:
+    for vendor in VENDORS:
+        if re.search(re.escape(vendor), question, flags=re.IGNORECASE):
+            return vendor
+    return None
 
-if user_input:
-    st.session_state.messages.append(
-        {"role": "user", "content": user_input}
+
+def format_high_risk_orders(data: dict[str, Any]) -> str:
+    records = data.get("records", [])
+    if not records:
+        return "No high-risk purchase orders were found."
+
+    lines = [f"I found {len(records)} high-risk purchase orders:"]
+    for record in records:
+        lines.append(
+            f"- {record.get('po_id', 'Unknown PO')} from "
+            f"{record.get('supplier', 'Unknown vendor')}: "
+            f"price anomaly {record.get('price_anomaly_score', 'N/A')}, "
+            f"delay probability {record.get('delay_probability', 'N/A')}."
+        )
+    return "\n".join(lines)
+
+
+def format_vendor_profile(data: dict[str, Any], vendor: str) -> str:
+    if data.get("message"):
+        return f"I could not find a risk profile for {vendor}."
+
+    return (
+        f"Risk profile for {data.get('supplier', vendor)}:\n"
+        f"- Reliability score: "
+        f"{data.get('supplier_reliability_score', 'N/A')}\n"
+        f"- Reliability bucket: "
+        f"{data.get('supplier_reliability_bucket', 'N/A')}\n"
+        f"- Total orders: {data.get('total_orders', 'N/A')}\n"
+        f"- Delayed orders: {data.get('delayed_orders', 'N/A')}\n"
+        f"- Average price anomaly score: "
+        f"{data.get('average_price_anomaly_score', 'N/A')}\n"
+        f"- Average delay probability: "
+        f"{data.get('average_delay_probability', 'N/A')}"
     )
 
-    with st.chat_message("user"):
-        st.write(user_input)
 
-    bot_reply = build_bot_reply(user_input)
-
-    st.session_state.messages.append(
-        {"role": "assistant", "content": bot_reply}
+def format_summary(data: dict[str, Any]) -> str:
+    return (
+        "ARGUS feature-store summary:\n"
+        f"- Vendors: {data.get('total_vendors', 'N/A')}\n"
+        f"- Purchase orders: {data.get('total_purchase_orders', 'N/A')}\n"
+        f"- Risk scores: {data.get('total_risk_scores', 'N/A')}\n"
+        f"- High price-risk orders: "
+        f"{data.get('high_price_risk_orders', 'N/A')}\n"
+        f"- Delayed orders: {data.get('delayed_orders', 'N/A')}\n"
+        f"- Average price anomaly score: "
+        f"{data.get('average_price_anomaly_score', 'N/A')}\n"
+        f"- Average delay probability: "
+        f"{data.get('average_delay_probability', 'N/A')}"
     )
 
-    with st.chat_message("assistant"):
-        st.write(bot_reply)
+
+def build_bot_reply(question: str) -> str:
+    normalized_question = question.lower()
+    vendor = detect_vendor(question)
+
+    try:
+        if "high risk" in normalized_question or "high-risk" in normalized_question:
+            data = call_api(
+                "/api/high-risk-purchase-orders",
+                params={"limit": 5},
+            )
+            return format_high_risk_orders(data)
+
+        if vendor:
+            data = call_api(f"/api/vendor-risk-profile/{vendor}")
+            return format_vendor_profile(data, vendor)
+
+        if "vendor" in normalized_question and (
+            "risk" in normalized_question
+            or "profile" in normalized_question
+        ):
+            return (
+                "Please include one of these vendor names: "
+                + ", ".join(VENDORS)
+                + "."
+            )
+
+        if "summary" in normalized_question or "overview" in normalized_question:
+            data = call_api("/api/summary")
+            return format_summary(data)
+
+        return (
+            "I can show high-risk purchase orders, provide a vendor risk "
+            "profile, or display the ARGUS summary."
+        )
+    except RuntimeError as error:
+        return str(error)
+
+
+def main() -> None:
+    print("ARGUS Assistant")
+    print("Ask about high-risk orders, vendor risk, or summary.")
+    print("Type 'exit' or 'quit' to stop.\n")
+
+    while True:
+        try:
+            question = input("You: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nGoodbye.")
+            break
+
+        if question.lower() in {"exit", "quit"}:
+            print("Goodbye.")
+            break
+        if not question:
+            continue
+
+        print(f"ARGUS: {build_bot_reply(question)}\n")
+
+
+if __name__ == "__main__":
+    main()
