@@ -2,6 +2,7 @@ from datetime import datetime
 
 from fastapi import FastAPI
 
+from app.routers.feature_store import router as feature_store_router
 from app.routers.mock_risk import router as mock_risk_router
 from app.routers.risk import router as risk_router
 
@@ -10,6 +11,7 @@ app = FastAPI(
     description="AI-powered Procurement & Supply Chain Risk Intelligence Platform built for SAP Ariba / S4HANA ecosystems",
     version="1.0.0"
 )
+app.include_router(feature_store_router)
 app.include_router(mock_risk_router)
 app.include_router(risk_router)
 

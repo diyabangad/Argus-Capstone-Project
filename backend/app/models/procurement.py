@@ -40,7 +40,6 @@ class PurchaseOrder(Base):
 
     item_category: Mapped[str | None] = mapped_column(String(100), nullable=True)
     material_group: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    vendor_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     order_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     delivery_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     expected_delivery_date: Mapped[date | None] = mapped_column(Date, nullable=True)

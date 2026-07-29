@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
-from sqlalchemy import delete
+from sqlalchemy import delete, inspect, text
 
 from app.core.database import Base, SessionLocal, engine
 from app.models.procurement import PurchaseOrder, RiskScore, Vendor
@@ -27,8 +27,42 @@ def clean_date(value):
     return pd.to_datetime(value).date()
 
 
+def get_value(row, *column_names):
+    for column_name in column_names:
+        if column_name in row.index:
+            return clean_value(row[column_name])
+    return None
+
+
+def ensure_model_columns():
+    inspector = inspect(engine)
+
+    with engine.begin() as connection:
+        for table in Base.metadata.sorted_tables:
+            existing_columns = {
+                column["name"]
+                for column in inspector.get_columns(table.name)
+            }
+            for column in table.columns:
+                if column.name in existing_columns:
+                    continue
+                if not column.nullable:
+                    raise RuntimeError(
+                        f"Database table {table.name} is missing required "
+                        f"column {column.name}."
+                    )
+                column_type = column.type.compile(dialect=engine.dialect)
+                connection.execute(
+                    text(
+                        f'ALTER TABLE "{table.name}" '
+                        f'ADD COLUMN "{column.name}" {column_type}'
+                    )
+                )
+
+
 def load_feature_store():
     Base.metadata.create_all(bind=engine)
+    ensure_model_columns()
 
     df = pd.read_csv(CSV_PATH)
 
@@ -43,6 +77,11 @@ def load_feature_store():
 
         for _, row in df.iterrows():
             supplier_name = str(row["Supplier"])
+            material_group = get_value(
+                row,
+                "material_group",
+                "Item_Category",
+            )
 
             if supplier_name not in vendors:
                 vendor = Vendor(
@@ -53,7 +92,7 @@ def load_feature_store():
                     reliability_bucket=clean_value(
                         row["Supplier_Reliability_Bucket"]
                     ),
-                    material_group=clean_value(row["material_group"]),
+                    material_group=material_group,
                 )
                 vendors[supplier_name] = vendor
                 db.add(vendor)
@@ -61,9 +100,12 @@ def load_feature_store():
             purchase_order = PurchaseOrder(
                 po_id=str(row["PO_ID"]),
                 vendor=vendors[supplier_name],
-                item_category=clean_value(row["item_category"]),
-                material_group=clean_value(row["material_group"]),
-                vendor_id=clean_value(row["vendor_id"]),
+                item_category=get_value(
+                    row,
+                    "item_category",
+                    "Item_Category",
+                ),
+                material_group=material_group,
                 order_date=clean_date(row["Order_Date"]),
                 delivery_date=clean_date(row["Delivery_Date"]),
                 expected_delivery_date=clean_date(
@@ -90,9 +132,6 @@ def load_feature_store():
                 delay_label=bool(row["Delay_Label"]),
                 price_gap=clean_value(row["Price_Gap"]),
                 price_gap_pct=clean_value(row["Price_Gap_Pct"]),
-                price_gap_anomaly_score=clean_value(
-                    row["Price_Anomaly_Score"]
-                ),
                 logistics_eta_variation_hours=clean_value(
                     row["logistics_median_eta_variation_hours"]
                 ),
@@ -117,23 +156,30 @@ def load_feature_store():
                 logistics_delivery_time_deviation=clean_value(
                     row["logistics_median_delivery_time_deviation"]
                 ),
-                supplier_reliability_score=clean_value(
-                    row["supplier_reliability_score"]
+                supplier_reliability_score=get_value(
+                    row,
+                    "supplier_reliability_score",
+                    "Supplier_Reliability_Score",
                 ),
-                price_anomaly_score=clean_value(
-                    row["price_anomaly_score"]
+                price_anomaly_score=get_value(
+                    row,
+                    "price_anomaly_score",
+                    "Price_Anomaly_Score",
                 ),
-                delay_probability=clean_value(
-                    row["delay_probability"]
+                delay_probability=get_value(
+                    row,
+                    "delay_probability",
+                    "logistics_median_delay_probability",
                 ),
-                delivery_time_deviation=clean_value(
-                    row["delivery_time_deviation"]
+                delivery_time_deviation=get_value(
+                    row,
+                    "delivery_time_deviation",
+                    "logistics_median_delivery_time_deviation",
                 ),
-                rolling_delay_rate=clean_value(
-                    row["rolling_delay_rate"]
-                ),
-                price_volatility_index=clean_value(
-                    row["price_volatility_index"]
+                rolling_delay_rate=get_value(row, "rolling_delay_rate"),
+                price_volatility_index=get_value(
+                    row,
+                    "price_volatility_index",
                 ),
             )
 
