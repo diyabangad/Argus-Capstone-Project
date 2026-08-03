@@ -2,242 +2,204 @@
 ### Autonomous Risk & Governance for Unified Supply Chain
 > *"See the risk before it becomes a loss."*
 
-Built for **Neovatic** Capstone Project — An AI-powered Procurement & Supply Chain Risk Intelligence Platform designed for SAP Ariba / S/4HANA enterprise ecosystems.
+Built for the **Neovatic Capstone Project**, ARGUS is an AI-powered Procurement & Supply Chain Risk Intelligence Platform built for ERP ecosystems such as SAP Ariba and SAP S/4HANA.
 
-ARGUS is an AI-powered procurement and supply chain risk intelligence platform designed for enterprise ERP ecosystems such as SAP Ariba and S/4HANA.
+ARGUS unifies procurement and logistics data into a shared feature store, applies risk models for pricing anomalies and delivery disruption, and delivers remediation and automation outputs via backend APIs and a React dashboard.
 
-## What is implemented
-- End-to-end data preprocessing and unified feature generation
-- Trained anomaly and disruption-risk ML models
-- FastAPI backend with risk, remediation, automation, and chatbot endpoints
-- React + Tailwind frontend dashboard
-- Docker-based local deployment setup
+---
 
-## Tech Stack
-- Backend: FastAPI + Python
-- ML: scikit-learn, joblib, pandas
-- Frontend: React + Vite + Tailwind
-- Chatbot: lightweight rule-based assistant endpoint
+## What ARGUS includes
+- End-to-end data ingestion and unified feature store creation
+- Price anomaly risk scoring using isolation forest based ML
+- Delay risk prediction using classification and regression models
+- Remediation recommendation engine for high-risk POs
+- Automation payload generation and webhook simulation
+- React + Tailwind dashboard for live risk visibility
+- Lightweight CLI chatbot assistant powered by backend APIs
+- Docker Compose deployment for local end-to-end demos
+
+---
+
+## Tech stack
+- Backend: FastAPI + Python 3.12
 - Database: SQLite demo feature store
+- ML: scikit-learn, XGBoost, pandas, joblib
+- Frontend: React + Vite + Tailwind CSS
+- Automation / webhook: JSON payload generation
+- Chatbot: rule-based CLI assistant interfacing with the backend
 - Deployment: Docker + Docker Compose
 
-## Run locally
-### With Docker
+---
+
+## Key capabilities
+- High-risk purchase order discovery
+- Supplier risk profile analytics
+- Price anomaly and delay probability scoring
+- Remediation advice for procurement decision-making
+- SAP-style automation payloads for RPA / integration engines
+- Live dashboard with KPI cards and risk tables
+- CLI assistant for natural-language risk queries
+
+---
+
+## Project structure
+
+```
+Argus-Capstone-Project/
+├── backend/
+│   ├── app/
+│   │   ├── main.py                    # FastAPI entrypoint and API router registration
+│   │   ├── routers/                   # API route handlers
+│   │   ├── models/                    # SQLAlchemy ORM models
+│   │   ├── schemas/                   # Pydantic request/response schemas
+│   │   └── core/                      # Config and database connection
+│   ├── data/
+│   │   ├── raw/                       # Original procurement and logistics source files
+│   │   └── processed/                 # Cleaned unified datasets for the feature store
+│   └── ml/                           # Model training scripts and saved joblib artifacts
+├── chatbot/                           # CLI assistant client for backend APIs
+├── docs/                              # Architecture, phase status, and documentation notes
+├── frontend/                          # React dashboard application
+├── docker-compose.yml                # Local Docker orchestration
+├── start.sh                          # Backend startup script with initialization checks
+└── README.md                       # Project documentation
+```
+
+---
+
+## Data and model artifacts
+- `backend/data/processed/unified_procurement_logistics.csv` is the main unified dataset used by the feature store.
+- `backend/ml/models/module_a_isolation_forest.joblib` is the price anomaly model.
+- `backend/ml/models/module_b_delay_classifier.joblib` and `backend/ml/models/module_b_delay_regressor.joblib` power delay forecasting.
+- Training and preprocessing artifacts are available in `backend/ml/` and the associated notebooks.
+
+---
+
+## Running ARGUS locally
+
+### Option 1: Docker Compose
+
 ```bash
+git clone https://github.com/diyabangad/Argus-Capstone-Project.git
+cd Argus-Capstone-Project
 docker compose up --build
 ```
 
-This starts:
-- Backend on http://localhost:8000
-- Frontend on http://localhost:5173
+- Backend: `http://localhost:8000`
+- Frontend: `http://localhost:5173`
 
-### Without Docker
+### Option 2: Local development
+
 ```bash
-cd backend
-source ../.venv/bin/activate
+cd Argus-Capstone-Project/backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 python app/init_db.py
 python app/load_feature_store.py
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-In another terminal:
+In a second terminal:
+
 ```bash
-cd frontend
+cd Argus-Capstone-Project/frontend
 npm install
 npm run dev -- --host 0.0.0.0
 ```
 
-## Core API endpoints
-- /api/price-risk
-- /api/delay-risk
-- /api/remediation
-- /api/automation/payload
-- /api/automation/webhook
-- /api/chatbot/ask
-- /api/summary
+### Backend quick-start script
+
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+This helper script initializes the SQLite database, loads the feature store, and starts the FastAPI backend only if it is not already running.
+
+---
+
+## Backend API endpoints
+
+### Risk and model endpoints
+- `GET /api/price-risk?po_id=<PO_ID>` — returns price anomaly score and risk flag.
+- `GET /api/delay-risk?po_id=<PO_ID>` — returns delay probability and predicted delay days.
+- `POST /api/remediation` — returns remediation advice for a purchase order.
+- `POST /api/automation/payload` — builds a structured SAP-style automation payload.
+- `POST /api/automation/webhook` — simulates webhook ingestion for automation payloads.
+- `POST /api/chatbot/ask` — generates an assistant response from a message.
+- `GET /api/summary` — returns aggregate dataset risk metrics.
+
+### Feature-store endpoints
+- `GET /api/high-risk-purchase-orders` — returns active high-risk POs from SQLite.
+- `GET /api/vendor-risk-profile/{supplier_name}` — returns supplier risk profile and scores.
+- `GET /api/summary` — returns feature-store summary metrics.
+
+### Mock risk endpoint
+- `GET /mock/risk-summary` — returns demo risk records for vendor/category filtering.
+
+---
+
+## Frontend dashboard
+The React dashboard is built with Vite and Tailwind CSS. It includes:
+- KPI cards for average anomaly and delay risk
+- Vendor risk profile selection and summary
+- High-risk purchase order table
+- Automation payload panel for PO action simulation
+
+The frontend proxies `/api` requests to the backend and displays live risk data from the SQLite feature store.
+
+---
+
+## Chatbot assistant
+The chatbot CLI in `chatbot/chatbot.py` demonstrates conversational interaction with ARGUS using backend APIs. It supports:
+- high-risk order queries
+- vendor risk profile requests
+- summary and overview responses
+
+This assistant is rule-driven and illustrates how ARGUS can support natural-language risk triage.
+
+---
 
 ## Tests
+Run backend API tests with:
+
 ```bash
-source .venv/bin/activate
+cd Argus-Capstone-Project
+source backend/.venv/bin/activate
 pytest -q tests/test_api.py
 ```
 
-## Team
-Built for the ARGUS capstone project
----
-
-## 🚨 The Problem
-Enterprises using ERP systems like SAP discover pricing fraud and delivery delays **only after they happen** — causing financial leakage and operational disruption. There is no unified system that proactively flags these risks before a PO is finalized or a shipment fails.
+The test suite validates the core risk endpoints and ensures backend behavior is stable.
 
 ---
 
-## ✅ Our Solution
-ARGUS is a unified AI platform with two intelligence engines sharing one vendor risk backbone:
-- **Proactively flags** pricing anomalies and fake invoices before approval
-- **Predicts** supply chain disruptions 5+ days before they occur
-- **Recommends** corrective actions — renegotiation targets or alternate vendor rerouting
-- **Converses** — a plain-English chatbot that queries live ML models on demand
-- **Integrates** — outputs clean JSON payloads ready for SAP / RPA automation triggers
+## Presentation flow
+1. Start the backend and verify health: `GET http://localhost:8000/health`
+2. Open the dashboard at `http://localhost:5173`
+3. Show high-risk POs and vendor profiles
+4. Demonstrate automation payload generation and webhook simulation
+5. Run the chatbot assistant for a live query
+6. Explain the data flow from CSV ingestion to risk scoring and remediation
 
 ---
 
-## 🧠 Modules
-
-| Module | Description | Models Used |
-|---|---|---|
-| **Module A** | Price & Invoice Anomaly Detection | Isolation Forest, Autoencoder, Prophet |
-| **Module B** | Supply Chain Disruption Prediction | XGBoost, LightGBM, Random Forest |
-| **Optimizer** | Remediation & Vendor Re-routing Engine | Greedy Constraint Optimizer |
-| **Argus Assistant** | Conversational AI Chatbot | LLM + RAG + Tool Calling |
-
-## 🏗️ System Architecture
-
-```
-┌──────────────────────────────────────────────────────┐
-│              DATA INGESTION LAYER                     │
-│    Procurement KPI Dataset + Logistics Dataset        │
-└───────────────────────┬──────────────────────────────┘
-                        │
-                        ▼
-┌──────────────────────────────────────────────────────┐
-│              SHARED FEATURE STORE                     │
-│   Vendor Reliability Score · Price Volatility Index   │
-│   Lead Time History  · Material Scarcity Index        │
-└────────────┬─────────────────────┬───────────────────┘
-             │                     │
-             ▼                     ▼
-┌─────────────────────┐  ┌─────────────────────────────┐
-│      MODULE A       │  │         MODULE B             │
-│    Price & Invoice  │  │   Supply Chain Disruption    │
-│   Anomaly Detection │  │      Delay Classifier        │
-└──────────┬──────────┘  └────────────┬────────────────┘
-           │                          │
-           └────────────┬─────────────┘
-                        ▼
-┌──────────────────────────────────────────────────────┐
-│        OPTIMIZATION & REMEDIATION ENGINE              │
-│  Renegotiation Target · Alternate Vendor Reroute      │
-└───────────────────────┬──────────────────────────────┘
-                        │
-                        ▼
-┌──────────────────────────────────────────────────────┐
-│                  DELIVERY LAYER                       │
-│  React Dashboard · Argus Chatbot · FastAPI Endpoint   │
-└──────────────────────────────────────────────────────┘
-```
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Backend API | FastAPI + Python 3.11 |
-| ML — Anomaly Detection | Scikit-learn (Isolation Forest), Keras (Autoencoder) |
-| ML — Forecasting | Prophet, ARIMA |
-| ML — Disruption | XGBoost, LightGBM |
-| Optimization | OR-Tools / Greedy Constraint Programming |
-| Frontend Dashboard | React + Tailwind CSS + Recharts |
-| Chatbot | LLM (Claude/GPT) + LangChain + RAG + ChromaDB |
-| Database | PostgreSQL |
-| Deployment | Docker + Render |
+## Value proposition
+ARGUS helps procurement and supply chain teams:
+- identify price anomalies before approval
+- predict delivery disruption risk ahead of execution
+- recommend remediation actions for procurement decisions
+- deliver structured outputs suitable for SAP / RPA automation
+- present a unified view of supplier risk and high-risk orders
 
 ---
 
-## 📁 Project Structure
-
-```
-argus-capstone/
-├── backend/
-│   ├── app/
-│   │   ├── main.py                  # FastAPI entrypoint
-│   │   ├── routers/                 # API route handlers
-│   │   ├── models/                  # ML model loaders
-│   │   ├── schemas/                 # Pydantic schemas
-│   │   └── core/                    # Config & DB connection
-│   ├── ml/
-│   │   ├── module_a_price_anomaly/  # Anomaly detection notebooks & scripts
-│   │   ├── module_b_disruption/     # Delay prediction notebooks & scripts
-│   │   └── optimization/            # Remediation engine
-│   └── data/
-│       ├── raw/                     # Original datasets
-│       └── processed/               # Cleaned & engineered datasets
-├── frontend/                        # React dashboard
-├── chatbot/                         # Argus Assistant (RAG + tool calling)
-├── docs/                            # Architecture & documentation
-├── .env.example                     # Environment variable template
-└── README.md
-```
-
-## 📊 Datasets
-
-| Dataset | Source | Purpose |
-|---|---|---|
-| Procurement KPI Analysis | Kaggle (shahriarkabir) | Module A — price anomaly, invoice risk |
-| Logistics & Supply Chain | Kaggle (datasetengineer) | Module B — delay prediction, disruption risk |
+## Notes
+- The current demo uses SQLite and local model artifacts for fast presentation.
+- The backend architecture is designed for easy extension to enterprise data sources.
+- Docker Compose provides a reproducible local deployment path.
 
 ---
 
-## 🤖 Argus Assistant — Chatbot Capabilities
-
-| User Query | Action |
-|---|---|
-| "Show high risk invoices this week" | Queries risk DB, returns flagged table |
-| "Why is invoice INV-4521 flagged?" | SHAP explanation in plain English |
-| "What should I pay for steel next month?" | Prophet forecast + renegotiation price |
-| "Is PO-1190 at risk of delay?" | Module B classifier → probability + days |
-| "Summarize this month's procurement risk" | Executive summary across both modules |
-
----
-
-## 💡 Why ARGUS for Neovatic
-
-| Neovatic Focus Area | ARGUS Alignment |
-|---|---|
-| SAP Ariba / S4HANA | Output payloads simulate SAP integration triggers |
-| Hyper-Automation / RPA | JSON API output ready for RPA bot consumption |
-| Manufacturing & Chemicals | Vendor + material-level risk profiling |
-| Data Science & AI | End-to-end ML pipeline from raw data to actionable insight |
-
----
-
-## 🚀 Getting Started
-
-```bash
-# Clone the repo
-git clone https://github.com/diyabangad/Argus-Capstone-Project.git
-cd Argus-Capstone-Project
-
-# Backend setup
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Run API
-uvicorn app.main:app --reload
-# API live at http://localhost:8000
-# Docs at http://localhost:8000/docs
-```
-
----
-
-## 📈 Project Status
-
-| Component | Status |
-|---|---|
-| Project Structure | ✅ Complete |
-| Dataset Ingestion | ✅ Complete |
-| EDA & Feature Engineering | ✅ Complete |
-| Module A — Price Anomaly | ✅ Complete |
-| Module B — Disruption Risk | ✅ Complete |
-| Optimization Engine | ✅ Complete|
-| React Dashboard | 🔴 Upcoming |
-| Argus Chatbot | 🟡 In Progress |
-| Deployment | 🔴 Upcoming |
-
----
-
-## 👥 Team
-Built by **Team ARGUS** for **Neovatic Capstone 2025**
-
-*Powered by Python · FastAPI · React · LangChain · XGBoost · Prophet*
-EOF
+## Credits
+Built by **Team ARGUS** for the Neovatic Capstone Project.
