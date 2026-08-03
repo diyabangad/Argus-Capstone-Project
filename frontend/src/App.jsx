@@ -3,6 +3,7 @@ import Header from "./components/Header.jsx";
 import KpiCards from "./components/KpiCards.jsx";
 import RiskyPoTable from "./components/RiskyPoTable.jsx";
 import VendorProfile from "./components/VendorProfile.jsx";
+import AutomationPanel from "./components/AutomationPanel.jsx";
 
 const vendors = [
   "Alpha_Inc",
@@ -105,6 +106,7 @@ function App() {
           loading={vendorLoading}
           error={vendorError}
         />
+        <AutomationPanel selectedOrder={orders[0]} />
         <RiskyPoTable
           orders={orders}
           loading={ordersLoading}

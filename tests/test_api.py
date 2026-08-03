@@ -49,3 +49,28 @@ def test_remediation_endpoint_returns_recommendation():
     assert body['recommended_action'] in {'renegotiate', 'expedite_shipping', 'backup_vendor', 'monitor'}
     assert 'severity_score' in body
     assert 'expected_cost' in body
+
+
+def test_automation_payload_endpoint_returns_payload():
+    payload = {
+        'po_id': 'PO-00001',
+        'supplier': 'Alpha_Inc',
+        'item_category': 'MRO',
+        'anomaly_score': 0.82,
+        'delay_probability': 0.78,
+    }
+
+    response = client.post('/api/automation/payload', json=payload)
+    assert response.status_code == 200
+    body = response.json()
+    assert body['po_id'] == 'PO-00001'
+    assert body['priority'] == 'high'
+    assert 'sap_actions' in body
+
+
+def test_chatbot_endpoint_returns_response():
+    response = client.post('/api/chatbot/ask', json={'message': 'What should I do about this delay?'})
+    assert response.status_code == 200
+    body = response.json()
+    assert 'reply' in body
+    assert 'status' in body
