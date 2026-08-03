@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background: #f8fafc;
+    color: #111827;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .argus-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 1.25rem;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  .argus-subtitle {
+    color: #1d4ed8;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    line-height: 1rem;
+    text-transform: uppercase;
+  }
+}
