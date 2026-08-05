@@ -20,6 +20,16 @@ ARGUS unifies procurement and logistics data into a shared feature store, applie
 
 ---
 
+## Live Demo 
+
+<img width="1600" height="734" alt="image" src="https://github.com/user-attachments/assets/d5aa40b5-5c88-4290-9176-d3d068d9131b" />
+
+<img width="1600" height="723" alt="image" src="https://github.com/user-attachments/assets/3263fea6-6b6c-4af0-b26b-b9ab71f8e407" />
+
+<img width="1600" height="510" alt="image" src="https://github.com/user-attachments/assets/d16ac8e4-5ddd-436e-978d-9178b4c3692a" />
+
+---
+
 ## Tech stack
 - Backend: FastAPI + Python 3.12
 - Database: SQLite demo feature store
