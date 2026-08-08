@@ -1,6 +1,145 @@
 import React, { useEffect, useState } from "react";
 import { Bot, Send } from "lucide-react";
 
+const LIVE_PO_ERROR =
+  "I could not load live purchase order data right now. Please confirm the backend is running and try again.";
+
+function toNumber(value) {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
+}
+
+function formatScore(value) {
+  const numericValue = toNumber(value);
+  return numericValue === null ? "Not available" : numericValue.toFixed(3);
+}
+
+function riskRank(order) {
+  const priceRisk = toNumber(order.price_anomaly_score);
+  const delayRisk = toNumber(order.delay_probability);
+  return (priceRisk ?? 0) + (delayRisk ?? 0);
+}
+
+function getRiskReason(order) {
+  const priceRisk = toNumber(order.price_anomaly_score);
+  const delayRisk = toNumber(order.delay_probability);
+
+  if ((delayRisk ?? 0) >= 0.75 && (priceRisk ?? 0) >= 0.5) {
+    return "Delay probability and price anomaly score are both high.";
+  }
+
+  if ((delayRisk ?? 0) >= 0.75) {
+    return "Delay probability is high.";
+  }
+
+  if ((priceRisk ?? 0) >= 0.5) {
+    return "Price anomaly score is high.";
+  }
+
+  return "This PO appears in the backend high-risk queue.";
+}
+
+function getRecommendedAction(order) {
+  const priceRisk = toNumber(order.price_anomaly_score);
+  const delayRisk = toNumber(order.delay_probability);
+
+  if ((delayRisk ?? 0) >= 0.75 && (priceRisk ?? 0) >= 0.5) {
+    return "Hold the PO temporarily, escalate to procurement leadership, review the supplier, and prepare a backup vendor option.";
+  }
+
+  if ((delayRisk ?? 0) >= 0.75) {
+    return "Review supplier lead time, confirm shipment readiness, and consider expedited shipment or rerouting to a backup supplier.";
+  }
+
+  if ((priceRisk ?? 0) >= 0.5) {
+    return "Review the price anomaly, compare negotiated price against history, and consider renegotiation.";
+  }
+
+  return "Review the PO details and confirm supplier status before approval.";
+}
+
+function sortByRisk(orders) {
+  return [...orders].sort((a, b) => riskRank(b) - riskRank(a));
+}
+
+function formatPoSummary(order, index) {
+  return `${index + 1}. ${order.po_id} - ${order.supplier}
+   Price anomaly score: ${formatScore(order.price_anomaly_score)}
+   Delay probability: ${formatScore(order.delay_probability)}
+   Reason: ${getRiskReason(order)}
+   Recommended action: ${getRecommendedAction(order)}`;
+}
+
+function matchesAny(text, keywords) {
+  return keywords.some((keyword) => text.includes(keyword));
+}
+
+function getAssistantIntent(message) {
+  const normalized = message.toLowerCase();
+
+  if (
+    matchesAny(normalized, [
+      "highest-risk",
+      "highest risk",
+      "riskiest",
+      "recommend action",
+      "what action",
+      "what should i do"
+    ])
+  ) {
+    return "highestRiskAction";
+  }
+
+  if (
+    matchesAny(normalized, [
+      "immediate attention",
+      "show high risk",
+      "high-risk",
+      "high risk",
+      "highest risk",
+      "which pos",
+      "which purchase orders",
+      "review first",
+      "orders should we review"
+    ])
+  ) {
+    return "topRiskOrders";
+  }
+
+  if (matchesAny(normalized, ["delay", "shipment", "late", "eta"])) {
+    return "delayAction";
+  }
+
+  return "topRiskOrders";
+}
+
+function buildTopRiskReply(orders) {
+  const topOrders = sortByRisk(orders).slice(0, 3);
+
+  return `Immediate attention required:
+${topOrders.map(formatPoSummary).join("\n\n")}`;
+}
+
+function buildActionReply(order, heading = "Recommended action for the highest-risk PO") {
+  return `${heading}:
+${order.po_id} - ${order.supplier}
+Price anomaly score: ${formatScore(order.price_anomaly_score)}
+Delay probability: ${formatScore(order.delay_probability)}
+Reason: ${getRiskReason(order)}
+Recommended action: ${getRecommendedAction(order)}`;
+}
+
+async function loadHighRiskOrders() {
+  const response = await fetch("/api/high-risk-purchase-orders?limit=20");
+
+  if (!response.ok) {
+    throw new Error(`High-risk PO request failed with ${response.status}`);
+  }
+
+  const body = await response.json();
+  return Array.isArray(body.records) ? body.records : [];
+}
+
 function AutomationPanel({ selectedOrder }) {
   const [payload, setPayload] = useState(null);
   const [message, setMessage] = useState("What should I do about this delay?");
@@ -47,20 +186,33 @@ function AutomationPanel({ selectedOrder }) {
 
   async function handleAsk() {
     try {
-      const response = await fetch("/api/chatbot/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
-      });
+      const orders = await loadHighRiskOrders();
 
-      if (!response.ok) {
-        throw new Error(`Chatbot failed with ${response.status}`);
+      if (!orders.length) {
+        setReply(LIVE_PO_ERROR);
+        return;
       }
 
-      const body = await response.json();
-      setReply(body.reply || "The assistant is ready to help.");
+      const sortedOrders = sortByRisk(orders);
+      const highestRiskOrder = sortedOrders[0];
+      const selectedLiveOrder = selectedOrder
+        ? orders.find((order) => order.po_id === selectedOrder.po_id)
+        : null;
+      const intent = getAssistantIntent(message);
+
+      if (intent === "topRiskOrders") {
+        setReply(buildTopRiskReply(sortedOrders));
+        return;
+      }
+
+      if (intent === "delayAction") {
+        setReply(buildActionReply(selectedLiveOrder || highestRiskOrder, "Delay-risk guidance"));
+        return;
+      }
+
+      setReply(buildActionReply(highestRiskOrder));
     } catch (error) {
-      setReply("The assistant is currently unavailable, but the workflow is queued for review.");
+      setReply(LIVE_PO_ERROR);
     }
   }
 
@@ -102,7 +254,7 @@ function AutomationPanel({ selectedOrder }) {
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <h3 className="text-sm font-semibold text-slate-900">Assistant</h3>
-          <p className="mt-2 text-sm text-slate-600">{reply}</p>
+          <p className="mt-2 whitespace-pre-line text-sm text-slate-600">{reply}</p>
           <div className="mt-4 flex items-center gap-2">
             <input
               className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
