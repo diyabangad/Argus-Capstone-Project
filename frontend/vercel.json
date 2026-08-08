@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://argus-backend-33du.onrender.com/api/:path*"
+    },
+    {
+      "source": "/mock/:path*",
+      "destination": "https://argus-backend-33du.onrender.com/mock/:path*"
+    }
+  ]
+}
